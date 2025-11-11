@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  leechbot:
+    build: .
+    container_name: telegram-leech-bot
+    env_file:
+      - config.env
+    volumes:
+      - ./downloads:/app/downloads
+    restart: unless-stopped
+    environment:
+      - ARIA2_HOST=localhost
+      - ARIA2_PORT=6800
