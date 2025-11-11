@@ -24,22 +24,32 @@ The bot downloads the files and automatically uploads them to Telegram for easy 
 - A Telegram Bot Token (from [@BotFather](https://t.me/BotFather))
 - aria2c installed (for torrent/magnet support)
 
-## 🚀 Installation
+## 🚀 Deployment Options
 
-### 1. Clone the repository
+### Option 1: Deploy to Heroku (Recommended for beginners)
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+Click the button above for one-click deployment to Heroku!
+
+📖 **[See detailed Heroku deployment guide](HEROKU.md)**
+
+### Option 2: Local Installation
+
+#### 1. Clone the repository
 
 ```bash
 git clone https://github.com/RecklessEvadingDriver/Leechrepo.git
 cd Leechrepo
 ```
 
-### 2. Install Python dependencies
+#### 2. Install Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Install aria2 (for torrent/magnet support)
+#### 3. Install aria2 (for torrent/magnet support)
 
 **Ubuntu/Debian:**
 ```bash
@@ -55,7 +65,7 @@ brew install aria2
 **Windows:**
 Download from [aria2 releases](https://github.com/aria2/aria2/releases)
 
-### 4. Configure the bot
+#### 4. Configure the bot
 
 Copy the example configuration file and edit it:
 

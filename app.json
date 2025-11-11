@@ -1,0 +1,47 @@
+{
+  "name": "Telegram Leech Bot",
+  "description": "A Telegram bot that can download from direct URLs, magnet links, and torrent files",
+  "repository": "https://github.com/RecklessEvadingDriver/Leechrepo",
+  "keywords": ["telegram", "bot", "leech", "torrent", "magnet", "download"],
+  "buildpacks": [
+    {
+      "url": "heroku-community/apt"
+    },
+    {
+      "url": "heroku/python"
+    },
+    {
+      "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git"
+    }
+  ],
+  "env": {
+    "BOT_TOKEN": {
+      "description": "Your Telegram Bot Token from @BotFather",
+      "required": true
+    },
+    "AUTHORIZED_USERS": {
+      "description": "Comma-separated list of Telegram User IDs allowed to use the bot (optional, leave empty to allow all)",
+      "required": false
+    },
+    "DOWNLOAD_DIR": {
+      "description": "Directory to store downloads",
+      "value": "./downloads",
+      "required": false
+    },
+    "MAX_DOWNLOAD_SIZE": {
+      "description": "Maximum download size in bytes",
+      "value": "2147483648",
+      "required": false
+    },
+    "ARIA2_HOST": {
+      "description": "Aria2 RPC host",
+      "value": "localhost",
+      "required": false
+    },
+    "ARIA2_PORT": {
+      "description": "Aria2 RPC port",
+      "value": "6800",
+      "required": false
+    }
+  }
+}
