@@ -166,6 +166,7 @@ async def process_download(update: Update, source: str):
     """Process download from any source"""
     # Send initial message
     status_message = await update.message.reply_text("⏳ Starting download...")
+    download_manager = None
     
     try:
         # Create download manager
@@ -206,7 +207,7 @@ async def process_download(update: Update, source: str):
         
         # Download the file
         await status_message.edit_text("📥 Downloading... Please wait.")
-        filepath = await download_manager.download(source, progress_callback)
+        filepath = await download_manager.download(source, progress_callback=progress_callback)
         
         await status_message.edit_text("✅ Download complete! Starting upload...")
         
@@ -228,6 +229,13 @@ async def process_download(update: Update, source: str):
     except Exception as e:
         logger.error(f"Download error: {e}", exc_info=True)
         await status_message.edit_text(f"❌ Error: {str(e)}")
+    finally:
+        # Clean up download manager resources
+        if download_manager:
+            try:
+                await download_manager.close()
+            except Exception:
+                pass
 
 
 @authorized_only

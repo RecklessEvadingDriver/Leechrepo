@@ -148,3 +148,55 @@ def is_magnet(text: str) -> bool:
 def is_torrent_file(text: str) -> bool:
     """Check if text is a torrent file path"""
     return text.endswith('.torrent')
+
+
+def sanitize_filename(filename: str, max_length: int = 255) -> str:
+    """
+    Sanitize and truncate filename to filesystem limits
+    
+    Args:
+        filename: Original filename
+        max_length: Maximum filename length (default 255 for most filesystems)
+        
+    Returns:
+        Sanitized filename with proper length and safe characters
+    """
+    import re
+    
+    # Remove or replace invalid characters for filesystems
+    # Keep alphanumeric, dots, hyphens, underscores, and spaces
+    filename = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', filename)
+    
+    # Remove leading/trailing spaces and dots
+    filename = filename.strip('. ')
+    
+    # If filename is empty after sanitization, use a default
+    if not filename:
+        filename = 'download'
+    
+    # Split filename and extension
+    if '.' in filename:
+        name_parts = filename.rsplit('.', 1)
+        name = name_parts[0]
+        ext = '.' + name_parts[1]
+    else:
+        name = filename
+        ext = ''
+    
+    # Calculate maximum length for name part
+    # Reserve space for extension
+    max_name_length = max_length - len(ext)
+    
+    # Truncate name if necessary
+    if len(name) > max_name_length:
+        name = name[:max_name_length]
+    
+    # Reconstruct filename
+    sanitized = name + ext
+    
+    # Final check to ensure total length is within limit
+    if len(sanitized) > max_length:
+        # If still too long, truncate more aggressively
+        sanitized = sanitized[:max_length]
+    
+    return sanitized
