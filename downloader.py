@@ -5,6 +5,7 @@ import aiohttp
 from pathlib import Path
 from typing import Optional, Callable
 from tqdm import tqdm
+from helpers import sanitize_filename
 
 class DirectDownloader:
     """Handle direct URL downloads"""
@@ -31,6 +32,9 @@ class DirectDownloader:
             filename = url.split('/')[-1].split('?')[0]
             if not filename:
                 filename = f"download_{int(time.time())}"
+        
+        # Sanitize filename to prevent filesystem errors
+        filename = sanitize_filename(filename)
         
         filepath = self.download_dir / filename
         
@@ -76,19 +80,27 @@ class TorrentDownloader:
                     secret=self.aria2_secret
                 )
             )
+            # Test the connection
+            self.aria2.client.get_version()
             return True
+        except ImportError:
+            raise ImportError(
+                "aria2p library is not installed. "
+                "Install it with: pip install aria2p"
+            )
         except Exception as e:
-            print(f"Failed to connect to aria2: {e}")
-            return False
+            raise ConnectionError(
+                f"Cannot connect to aria2 RPC at {self.aria2_host}:{self.aria2_port}. "
+                f"Please ensure aria2c is running with RPC enabled. "
+                f"Start it with: aria2c --enable-rpc --rpc-listen-port={self.aria2_port}\n"
+                f"Error details: {str(e)}"
+            )
     
     async def download_torrent(self, torrent_path: str, 
                                progress_callback: Optional[Callable] = None) -> str:
         """Download from torrent file"""
         if not self.aria2:
             self.connect()
-        
-        if not self.aria2:
-            raise ConnectionError("Could not connect to aria2")
         
         download = self.aria2.add_torrent(
             torrent_path,
@@ -102,9 +114,6 @@ class TorrentDownloader:
         """Download from magnet link"""
         if not self.aria2:
             self.connect()
-        
-        if not self.aria2:
-            raise ConnectionError("Could not connect to aria2")
         
         download = self.aria2.add_magnet(
             magnet_uri,
