@@ -315,6 +315,37 @@ def main():
     # Start the bot
     logger.info("Starting bot...")
     print("\n✅ Bot is running! Press Ctrl+C to stop.\n")
+    
+    # Check if running on Heroku (PORT environment variable is set)
+    port = os.environ.get('PORT')
+    if port:
+        # Running on Heroku - start a simple HTTP server to keep dyno alive
+        import threading
+        from http.server import HTTPServer, BaseHTTPRequestHandler
+        
+        class HealthCheckHandler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                """Handle GET requests for health checks"""
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'Bot is running!')
+            
+            def log_message(self, format, *args):
+                """Suppress HTTP server logs"""
+                pass
+        
+        def run_http_server():
+            """Run HTTP server in background thread"""
+            server = HTTPServer(('0.0.0.0', int(port)), HealthCheckHandler)
+            logger.info(f"HTTP server listening on port {port} for Heroku health checks")
+            server.serve_forever()
+        
+        # Start HTTP server in background thread
+        http_thread = threading.Thread(target=run_http_server, daemon=True)
+        http_thread.start()
+    
+    # Run bot in polling mode
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 

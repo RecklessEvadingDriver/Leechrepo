@@ -113,36 +113,59 @@ class Aria2Downloader:
         self.aria2 = None
         self._connected = False
         
-    def connect(self):
-        """Connect to aria2 RPC with better error messages"""
+    def connect(self, max_retries=3, initial_wait=1):
+        """Connect to aria2 RPC with retry logic and better error messages
+        
+        Args:
+            max_retries: Maximum number of connection attempts (default: 3)
+            initial_wait: Initial wait time in seconds before first retry (default: 1)
+        """
         if self._connected and self.aria2:
             return True
             
         try:
             import aria2p
             
-            # Create aria2p client
-            client = aria2p.Client(
-                host=f"http://{self.aria2_host}",
-                port=self.aria2_port,
-                secret=self.aria2_secret
-            )
+            retry_count = 0
+            last_error = None
             
-            self.aria2 = aria2p.API(client)
-            
-            # Test the connection
-            try:
-                self.aria2.client.get_version()
-                self._connected = True
-                logger.info(f"Successfully connected to aria2 RPC at {self.aria2_host}:{self.aria2_port}")
-                return True
-            except Exception as e:
-                raise ConnectionError(
-                    f"Cannot connect to aria2 RPC at {self.aria2_host}:{self.aria2_port}. "
-                    f"Please ensure aria2c is running with RPC enabled.\n"
-                    f"Start it with: aria2c --enable-rpc --rpc-listen-port={self.aria2_port}\n"
-                    f"Error: {str(e)}"
-                )
+            while retry_count < max_retries:
+                try:
+                    # Create aria2p client
+                    client = aria2p.Client(
+                        host=f"http://{self.aria2_host}",
+                        port=self.aria2_port,
+                        secret=self.aria2_secret
+                    )
+                    
+                    self.aria2 = aria2p.API(client)
+                    
+                    # Test the connection
+                    self.aria2.client.get_version()
+                    self._connected = True
+                    logger.info(f"Successfully connected to aria2 RPC at {self.aria2_host}:{self.aria2_port}")
+                    return True
+                    
+                except Exception as e:
+                    last_error = e
+                    retry_count += 1
+                    
+                    if retry_count < max_retries:
+                        wait_time = initial_wait * (2 ** (retry_count - 1))  # Exponential backoff
+                        logger.warning(
+                            f"Failed to connect to aria2 RPC (attempt {retry_count}/{max_retries}). "
+                            f"Retrying in {wait_time}s... Error: {str(e)}"
+                        )
+                        time.sleep(wait_time)
+                    else:
+                        # All retries exhausted
+                        raise ConnectionError(
+                            f"Cannot connect to aria2 RPC at {self.aria2_host}:{self.aria2_port} "
+                            f"after {max_retries} attempts. "
+                            f"Please ensure aria2c is running with RPC enabled.\n"
+                            f"Start it with: aria2c --enable-rpc --rpc-listen-port={self.aria2_port}\n"
+                            f"Error: {str(last_error)}"
+                        )
                 
         except ImportError:
             raise ImportError(
